@@ -300,12 +300,14 @@ button,input,select,textarea{font:inherit}
           <label>Tipo</label>
           <select id="evKind">
             <option>Atividade</option>
+            <option>Aula Prática Externa</option>
+            <option>Ação Extensionista</option>
+            <option>Evento</option>
             <option>Oficina</option>
             <option>Palestra</option>
-            <option>Visita técnica</option>
             <option>Reunião</option>
-            <option>Evento</option>
-          </select>
+            <option>Visita técnica</option>
+            </select>
         </div>
       </div>
       <div class="field">
@@ -357,7 +359,8 @@ const DAY_NAMES = [
   ["DOMINGO","Domingo"]
 ];
 
-const PACK_HEIGHT = 1300; // usable height inside page body, in CSS px at 810x1440.
+const PACK_HEIGHT = 1300;
+const BETWEEN_BLOCKS = 44;
 let activeDay = 0;
 let state = defaultState();
 let renderTimer = null;
@@ -535,25 +538,6 @@ function measureBlock(day,events,continuation=false){
   box.innerHTML="";
   return h;
 }
-function splitDay(day){
-  const evs=day.events||[];
-  if(!evs.length) return state.includeEmpty ? [{day,events:[],continuation:false}] : [];
-  const blocks=[];
-  let chunk=[];
-  let continuation=false;
-  for(const e of evs){
-    chunk.push(e);
-    const h=measureBlock(day,chunk,continuation);
-    if(h>PACK_HEIGHT && chunk.length>1){
-      const last=chunk.pop();
-      blocks.push({day,events:[...chunk],continuation});
-      continuation=true;
-      chunk=[last];
-    }
-  }
-  if(chunk.length) blocks.push({day,events:[...chunk],continuation});
-  return blocks;
-}
 function newContentPage(){
   const wrap=document.createElement("div");
   wrap.className="sheet-wrap";
@@ -568,43 +552,337 @@ function newContentPage(){
   return wrap;
 }
 function renderPreview(){
-  state.period=document.getElementById("period").value;
-  state.includeEmpty=document.getElementById("includeEmpty").checked;
+
+  state.period =
+    document.getElementById("period").value;
+
+  state.includeEmpty =
+    document.getElementById("includeEmpty").checked;
+
   persist();
 
-  const root=document.getElementById("previewPages");
+  const root =
+    document.getElementById("previewPages");
+
   root.innerHTML="";
 
-  const coverWrap=document.createElement("div");
+
+  // CAPA
+
+  const coverWrap =
+    document.createElement("div");
+
   coverWrap.className="sheet-wrap";
-  coverWrap.innerHTML=`<div class="sheet cover"><div class="period-pill">${esc(state.period||"PERÍODO DA SEMANA")}</div></div>`;
+
+  coverWrap.innerHTML=`
+    <div class="sheet cover">
+      <div class="period-pill">
+        ${esc(
+          state.period ||
+          "PERÍODO DA SEMANA"
+        )}
+      </div>
+    </div>
+  `;
+
   root.appendChild(coverWrap);
 
-  let blocks=[];
-  state.days.forEach(d=>blocks.push(...splitDay(d)));
-  if(!blocks.length) return;
 
-  let page=null, body=null, used=0, count=0;
+
+  // CONTROLE DA PÁGINA
+
+  let page=null;
+  let body=null;
+
+  let used=0;
+  let blockCount=0;
+
+
+
   function startPage(){
+
     page=newContentPage();
+
     root.appendChild(page);
-    body=page.querySelector(".page-body");
-    used=0; count=0;
+
+    body=
+      page.querySelector(".page-body");
+
+    used=0;
+    blockCount=0;
   }
+
+
+
+  // ADICIONA UM BLOCO DE DIA
+
+  function appendBlock(
+    day,
+    events,
+    continuation
+  ){
+
+    const holder=
+      document.createElement("div");
+
+    holder.innerHTML=
+      dayBlockHTML(
+        day,
+        events,
+        continuation
+      );
+
+    body.appendChild(
+      holder.firstElementChild
+    );
+
+
+    const blockHeight=
+      measureBlock(
+        day,
+        events,
+        continuation
+      );
+
+
+    used +=
+      (blockCount
+        ? BETWEEN_BLOCKS
+        : 0)
+      +
+      blockHeight;
+
+
+    blockCount++;
+  }
+
+
+
+  // ESPAÇO DISPONÍVEL NA PÁGINA
+
+  function availableHeight(){
+
+    return (
+      PACK_HEIGHT
+      -
+      used
+      -
+      (
+        blockCount
+        ? BETWEEN_BLOCKS
+        : 0
+      )
+    );
+  }
+
+
+
+  // CALCULA QUANTOS EVENTOS CABEM
+
+  function maxEventsThatFit(
+    day,
+    events,
+    startIndex,
+    continuation
+  ){
+
+    const available=
+      availableHeight();
+
+    let best=0;
+
+
+    for(
+      let end=startIndex+1;
+      end<=events.length;
+      end++
+    ){
+
+      const candidate=
+        events.slice(
+          startIndex,
+          end
+        );
+
+
+      const h=
+        measureBlock(
+          day,
+          candidate,
+          continuation
+        );
+
+
+      if(h<=available){
+
+        best=
+          end-startIndex;
+
+      }else{
+
+        break;
+
+      }
+
+    }
+
+
+    return best;
+  }
+
+
+
+  // PRIMEIRA PÁGINA
+
   startPage();
 
-  blocks.forEach(b=>{
-    const h=measureBlock(b.day,b.events,b.continuation);
-    const gap=count?28:0;
-    if(count && used+gap+h>PACK_HEIGHT){
-      startPage();
+
+
+  // PROCESSA TODOS OS DIAS
+
+  for(const day of state.days){
+
+    const events=
+      day.events || [];
+
+
+
+    // DIA SEM EVENTOS
+
+    if(!events.length){
+
+      if(!state.includeEmpty)
+        continue;
+
+
+      const h=
+        measureBlock(
+          day,
+          [],
+          false
+        );
+
+
+      if(
+        blockCount &&
+        h > availableHeight()
+      ){
+
+        startPage();
+
+      }
+
+
+      appendBlock(
+        day,
+        [],
+        false
+      );
+
+
+      continue;
     }
-    const holder=document.createElement("div");
-    holder.innerHTML=dayBlockHTML(b.day,b.events,b.continuation);
-    body.appendChild(holder.firstElementChild);
-    used += (count?28:0)+h;
-    count++;
-  });
+
+
+
+    // EVENTOS DO DIA
+
+    let index=0;
+    let continuation=false;
+
+
+
+    while(
+      index < events.length
+    ){
+
+
+      // Vê quantos eventos cabem
+      // no espaço restante
+
+      let fit=
+        maxEventsThatFit(
+          day,
+          events,
+          index,
+          continuation
+        );
+
+
+
+      // Se nenhum couber,
+      // abre uma nova página
+
+      if(fit===0){
+
+        if(blockCount>0){
+
+          startPage();
+
+          continue;
+
+        }
+
+
+        // Segurança contra evento
+        // excepcionalmente grande
+
+        fit=1;
+
+      }
+
+
+
+      // Coloca os eventos
+      // que conseguiram caber
+
+      appendBlock(
+
+        day,
+
+        events.slice(
+          index,
+          index+fit
+        ),
+
+        continuation
+
+      );
+
+
+      index += fit;
+
+
+      // Se restarem eventos do mesmo dia,
+      // o próximo bloco será continuação
+
+      continuation=true;
+
+    }
+
+  }
+
+
+
+  // REMOVE PÁGINA VAZIA
+
+  if(
+    root.lastElementChild &&
+
+    root.lastElementChild
+      !== coverWrap &&
+
+    root.lastElementChild
+      .querySelector(".page-body") &&
+
+    !root.lastElementChild
+      .querySelector(".day-block")
+  ){
+
+    root.lastElementChild.remove();
+
+  }
+
 }
 function renderPreviewDebounced(){
   clearTimeout(renderTimer);
