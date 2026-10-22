@@ -43,12 +43,12 @@ button,input,select,textarea{font:inherit}
   grid-template-columns:minmax(380px,540px) 1fr;
   min-height:calc(100vh - 58px);
 }
-.editor{
+.{
   background:#fff;
   padding:18px;
   border-right:1px solid #ddd;
   overflow:auto;
-  max-height:calc(100vh - 58px);
+  max-height:auto;
 }
 .preview-pane{padding:20px;overflow:auto}
 .field{margin-bottom:12px}
@@ -159,7 +159,7 @@ button,input,select,textarea{font:inherit}
 
 @media(max-width:1050px){
   .shell{grid-template-columns:1fr}
-  .editor{max-height:none;border-right:0;border-bottom:1px solid #ddd}
+  .{max-height:none;border-right:0;border-bottom:1px solid #ddd}
   .preview-pane{overflow:visible}
 }
 @media print{
@@ -180,7 +180,7 @@ button,input,select,textarea{font:inherit}
     background:#8d1420!important;
   }
 
-  .appbar,.editor,.preview-title{
+  .appbar,.,.preview-title{
     display:none!important;
   }
 
@@ -270,7 +270,7 @@ button,input,select,textarea{font:inherit}
 </div>
 
 <div class="shell">
-  <aside class="editor">
+  <aside class="">
     <div class="week-box">
       <div class="field">
         <label>Período da semana</label>
