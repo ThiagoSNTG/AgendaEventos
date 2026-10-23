@@ -43,7 +43,7 @@ button,input,select,textarea{font:inherit}
   grid-template-columns:minmax(380px,540px) 1fr;
   min-height:calc(100vh - 58px);
 }
-.{
+.editor{
   background:#fff;
   padding:18px;
   border-right:1px solid #ddd;
@@ -96,7 +96,7 @@ button,input,select,textarea{font:inherit}
   background-image: url("foto modelo.png");
   background-size:100% 100%;
   background-repeat:no-repeat;
-  background-psition:center;
+  background-position:center;
 }
 .cover .period-pill{
   position:absolute;left:55px;top:742px;width:665px;height:78px;
@@ -181,7 +181,7 @@ button,input,select,textarea{font:inherit}
     background:#8d1420!important;
   }
 
-  .appbar,.,.preview-title{
+  .appbar,.editor,.preview-title{
     display:none!important;
   }
 
@@ -255,7 +255,7 @@ button,input,select,textarea{font:inherit}
     -webkit-print-color-adjust:exact!important;
     print-color-adjust:exact!important;
 }
-  }
+  
 }
 </style>
 </head>
@@ -271,7 +271,7 @@ button,input,select,textarea{font:inherit}
 </div>
 
 <div class="shell">
-  <aside class="">
+  <aside class="editor">
     <div class="week-box">
       <div class="field">
         <label>Período da semana</label>
