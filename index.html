@@ -516,7 +516,7 @@ function dayBlockHTML(day, events, continuation=false){
       <div>
         <div class="event-title">${esc(e.kind||"Atividade")}: “${esc(e.title||"Evento")}”</div>
         ${e.course?`<div class="event-course">${esc(e.course)}</div>`:""}
-        ${e.location?`<div class="event-location">${e.mode==="Remoto"?"🖥️":"📍"} ${esc(e.location)}</div>`:""}
+        ${e.location?`<div class="event-location">${e.mode==="Remoto"?"💻":e.mode==="Híbrido"?"📍 💻":"📍"} ${esc(e.location)}</div>`:""}
       </div>
     </div>
   `).join("") : `<div class="empty-card">Nenhum evento cadastrado para este dia.</div>`;
